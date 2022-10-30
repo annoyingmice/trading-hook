@@ -12,6 +12,15 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use((req, res, next) => {
+    const timestart = Date.now();
+
+    next();
+    
+    const timeend = Date.now();
+    console.log(`[${new Date().toGMTString()}]: ${req.method.toUpperCase()} ${req.url} ${res.statusCode} ${timeend-timestart}s`);
+});
+
 app.use("/bybit", bybit);
 
 app.get("/health", (req, res) => {

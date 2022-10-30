@@ -31,8 +31,18 @@ const longPosition = async (req, res) => {
     };
 
     restClient.placeActiveOrder(position)
-    .then((response) => res.status(200).json(response))
-    .catch((error) => res.status(400).json(error));
+    .then((response) => {
+        if(response.ret_msg !== "OK") {
+            console.log(`[${new Date().toGMTString()}]: ${req.method.toUpperCase()} ${req.url} ${400} -> ${response.ret_msg}`);
+            return res.status(400).json(response);
+        }
+        console.log(`[${new Date().toGMTString()}]: ${req.method.toUpperCase()} ${req.url} ${200} -> ${response.ret_msg}`);
+        return res.status(200).json(response);
+    })
+    .catch((error) => {
+        console.log(`[${new Date().toGMTString()}]: ${req.method.toUpperCase()} ${req.url} ${400} -> Server error: ${error.message}`);
+        return res.status(400).json(error);
+    });
 }
 
 const shortPosition = async (req, res) => {
@@ -62,8 +72,18 @@ const shortPosition = async (req, res) => {
     };
 
     restClient.placeActiveOrder(position)
-    .then((response) => res.status(200).json(response))
-    .catch((error) => res.status(400).json(error));
+    .then((response) => {
+        if(response.ret_msg !== "OK") {
+            console.log(`[${new Date().toGMTString()}]: ${req.method.toUpperCase()} ${req.url} ${400} -> ${response.ret_msg}`);
+            return res.status(400).json(response);
+        }
+        console.log(`[${new Date().toGMTString()}]: ${req.method.toUpperCase()} ${req.url} ${200} -> ${response.ret_msg}`);
+        return res.status(200).json(response)
+    })
+    .catch((error) => {
+        console.log(`[${new Date().toGMTString()}]: ${req.method.toUpperCase()} ${req.url} ${400} -> Server error: ${error.message}`);
+        return res.status(400).json(error);
+    });
 }
 
 module.exports = {
