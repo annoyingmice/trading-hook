@@ -1,3 +1,4 @@
+require("../../untils");
 const { SpotClientV3 } = require('bybit-api');
 
 const _KEY = process.env.BYBIT_KEY;
@@ -11,7 +12,7 @@ const sportOrderPosition = async (req, res) => {
         testnet
     });
     let symbol = String(req.body.symbol.join('')).toUpperCase();
-    let orderQty = String(req.body.qty);
+    let orderQty = 0;
     let primaryCurrency = String(req.body.symbol[0]);
     let secondaryCurrency = String(req.body.symbol[1]);
     const side = String(req.body.side).charAt(0).toUpperCase() + String(req.body.side).slice(1);
@@ -27,11 +28,9 @@ const sportOrderPosition = async (req, res) => {
 
         const balances = await restClient.getBalances();
         const currencyBalance = balances.result.balances.filter(item => side==="Sell"?item.coinId === primaryCurrency:item.coinId===secondaryCurrency).pop();
-
-        console.log(currencyBalance);
-
+        const free = parseFloat(currencyBalance.free); // 7.62939022294
         if(req.body.allBalance) {
-            position.orderQty = currencyBalance.free;
+            position.orderQty = free.toFixedNoRound(7);
         }
 
         const response = await restClient.submitOrder(position);
