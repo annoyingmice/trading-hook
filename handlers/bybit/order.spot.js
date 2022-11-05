@@ -12,14 +12,12 @@ const sportOrderPosition = async (req, res) => {
         testnet
     });
     let symbol = String(req.body.symbol.join('')).toUpperCase();
-    let orderQty = 0;
     let primaryCurrency = String(req.body.symbol[0]);
     let secondaryCurrency = String(req.body.symbol[1]);
     const side = String(req.body.side).charAt(0).toUpperCase() + String(req.body.side).slice(1);
     const orderType = String(req.body.orderType).toUpperCase();
     const position = {
         symbol,
-        orderQty,
         side,
         orderType
     };
@@ -29,8 +27,17 @@ const sportOrderPosition = async (req, res) => {
         const balances = await restClient.getBalances();
         const currencyBalance = balances.result.balances.filter(item => side==="Sell"?item.coinId === primaryCurrency:item.coinId===secondaryCurrency).pop();
         const free = parseFloat(currencyBalance.free); // 7.62939022294
-        if(req.body.allBalance) {
+
+        if(side === "Sell") {
             position.orderQty = free.toFixedNoRound(7);
+        }
+
+        if(side === "Buy" && req.body.allBalance) {
+            position.orderQty = free.toFixedNoRound(7);
+        }
+
+        if(!req.body.allBalance && side === "Buy") {
+            position.orderQty = parseFloat(req.body.qty).toFixedNoRound(7);
         }
 
         const response = await restClient.submitOrder(position);
@@ -47,8 +54,6 @@ const sportOrderPosition = async (req, res) => {
         return res.status(400).json(error);
     }
 }
-
-
 
 module.exports = {
     sportOrderPosition
