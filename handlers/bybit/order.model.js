@@ -2,7 +2,7 @@ const { LinearPositionIdx, LinearTimeInForce } = require("bybit-api");
 
 const model = {
   side: "Sell",
-  symbol: "BTCUSDT",
+  // symbol: "BTCUSDT",
   order_type: "Market",
   qty: 0.001,
   // price?: number,
@@ -19,15 +19,15 @@ const model = {
 
 const modelv5 = {
   category: "linear",
-  symbol: "BTCUSDT",
+  // symbol: "BTCUSDT",
   // side: "Buy",
   orderType: "Market",
-  qty: "0.000036", // $1
+  // qty: "0.001", // $6
   // price: "25000",
-  timeInForce: "IOC",
-  positionIdx: 0,
+  // timeInForce: "IOC",
+  // positionIdx: 0,
   // orderLinkId: "usdt-test-01",
-  reduceOnly: false,
+  // reduceOnly: false,
   // takeProfit: "28000",
   // stopLoss: "20000",
   tpslMode: "Partial",

@@ -4,23 +4,7 @@ const cors = require("cors");
 const bybit = require("./handlers/bybit");
 
 const app = express();
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (
-      [
-        "http://52.89.214.238",
-        "http://34.212.75.30",
-        "http://54.218.53.128",
-        "http://52.32.178.7",
-      ].indexOf(origin) !== -1
-    ) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-};
-
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -37,7 +21,7 @@ app.use((req, res, next) => {
   );
 });
 
-app.use("/bybit", cors(corsOptions), bybit);
+app.use("/bybit", bybit);
 
 app.get("/health", (req, res) => {
   return res.sendStatus(200);
