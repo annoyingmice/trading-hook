@@ -5,26 +5,26 @@ const { modelv5 } = require("./order.model");
 const _KEY = process.env.BYBIT_KEY;
 const _SECRET = process.env.BYBIT_SECRET;
 const testnet = process.env.NODE_ENV == "development";
+const stopLossPoints = process.env.STOP_LOSS_POINTS || 10;
+const takeProfitPoints = stopLossPoints * 5;
 
 // Stop Loss Level: Stop Loss = Entry Price - (Risk Percentage * Entry Price)
 // Take Profit Level: Take Profit = Entry Price + 5 * (Risk Percentage * Entry Price)
 // 5:1 Risk/Reward
 const takeProfit = (entryPrice, side) =>
   side === "Buy"
-    ? parseFloat(
-        parseFloat(entryPrice) + parseFloat(5 * (0.01 * entryPrice)),
-      ).toFixed(1)
-    : parseFloat(
-        parseFloat(entryPrice) - parseFloat(5 * (0.01 * entryPrice)),
-      ).toFixed(1);
+    ? parseFloat(parseFloat(entryPrice) + parseFloat(takeProfitPoints)).toFixed(
+        1,
+      )
+    : parseFloat(parseFloat(entryPrice) - parseFloat(takeProfitPoints)).toFixed(
+        1,
+      );
 const stopLoss = (entryPrice, side) =>
   side === "Buy"
-    ? parseFloat(
-        parseFloat(entryPrice) - parseFloat(0.01 * entryPrice),
-      ).toFixed(1)
-    : parseFloat(
-        parseFloat(entryPrice) + parseFloat(0.01 * entryPrice),
-      ).toFixed(1);
+    ? parseFloat(parseFloat(entryPrice) - parseFloat(stopLossPoints)).toFixed(1)
+    : parseFloat(parseFloat(entryPrice) + parseFloat(stopLossPoints)).toFixed(
+        1,
+      );
 const uuid = () => crypto.randomBytes(16).toString("hex");
 
 const apiPerpv5 = async (req, res) => {
@@ -44,7 +44,11 @@ const apiPerpv5 = async (req, res) => {
       buyLeverage: "20",
       sellLeverage: "20",
     });
-
+    console.log(
+      payload.price,
+      takeProfit(payload.price, payload.side),
+      stopLoss(payload.price, payload.side),
+    );
     // Create order
     const response = await client.submitOrder({
       ...modelv5,
