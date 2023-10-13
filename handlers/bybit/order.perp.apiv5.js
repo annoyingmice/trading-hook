@@ -5,25 +5,25 @@ const { modelv5 } = require("./order.model");
 const _KEY = process.env.BYBIT_KEY;
 const _SECRET = process.env.BYBIT_SECRET;
 const testnet = process.env.NODE_ENV == "development";
-const stopLossPoints = process.env.STOP_LOSS_POINTS || 10;
-const takeProfitPoints = stopLossPoints * 5;
 
 // Stop Loss Level: Stop Loss = Entry Price - (Risk Percentage * Entry Price)
 // Take Profit Level: Take Profit = Entry Price + 5 * (Risk Percentage * Entry Price)
 // 5:1 Risk/Reward
-const takeProfit = (entryPrice, side) =>
+const takeProfit = (entryPrice, side, points = 10, decimals = 1) =>
   side === "Buy"
-    ? parseFloat(parseFloat(entryPrice) + parseFloat(takeProfitPoints)).toFixed(
-        1,
+    ? parseFloat(parseFloat(entryPrice) + parseFloat(points)).toFixed(
+        parseInt(decimals),
       )
-    : parseFloat(parseFloat(entryPrice) - parseFloat(takeProfitPoints)).toFixed(
-        1,
+    : parseFloat(parseFloat(entryPrice) - parseFloat(points)).toFixed(
+        parseInt(decimals),
       );
-const stopLoss = (entryPrice, side) =>
+const stopLoss = (entryPrice, side, points = 10, decimals = 1) =>
   side === "Buy"
-    ? parseFloat(parseFloat(entryPrice) - parseFloat(stopLossPoints)).toFixed(1)
-    : parseFloat(parseFloat(entryPrice) + parseFloat(stopLossPoints)).toFixed(
-        1,
+    ? parseFloat(parseFloat(entryPrice) - parseFloat(points)).toFixed(
+        parseInt(decimals),
+      )
+    : parseFloat(parseFloat(entryPrice) + parseFloat(points)).toFixed(
+        parseInt(decimals),
       );
 const uuid = () => crypto.randomBytes(16).toString("hex");
 
@@ -35,6 +35,7 @@ const apiPerpv5 = async (req, res) => {
       secret: _SECRET,
     });
     const payload = req.body;
+    const takeProfitPoints = req.body.points * 5;
 
     // Set leverage isolated margin
     await client.switchIsolatedMargin({
@@ -44,11 +45,6 @@ const apiPerpv5 = async (req, res) => {
       buyLeverage: "20",
       sellLeverage: "20",
     });
-    console.log(
-      payload.price,
-      takeProfit(payload.price, payload.side),
-      stopLoss(payload.price, payload.side),
-    );
     // Create order
     const response = await client.submitOrder({
       ...modelv5,
@@ -58,16 +54,36 @@ const apiPerpv5 = async (req, res) => {
       price: payload.price,
       positionIdx: payload.side === "Buy" ? 1 : 2,
       orderLinkId: uuid(),
-      takeProfit: takeProfit(payload.price, payload.side),
-      stopLoss: stopLoss(payload.price, payload.side),
-      tpLimitPrice: takeProfit(payload.price, payload.side),
-      slLimitPrice: stopLoss(payload.price, payload.side),
+      takeProfit: takeProfit(
+        payload.price,
+        payload.side,
+        takeProfitPoints,
+        payload.decimals,
+      ),
+      stopLoss: stopLoss(
+        payload.price,
+        payload.side,
+        payload.points,
+        payload.decimals,
+      ),
+      tpLimitPrice: takeProfit(
+        payload.price,
+        payload.side,
+        takeProfitPoints,
+        payload.decimals,
+      ),
+      slLimitPrice: stopLoss(
+        payload.price,
+        payload.side,
+        payload.points,
+        payload.decimals,
+      ),
     });
 
     console.log(
       `[${new Date().toGMTString()}]: ${req.method.toUpperCase()} ${
         req.url
-      } ${200} -> ${response.retMsg}`,
+      } ${200} -> ${payload.ticker} ${response.retMsg}`,
     );
     return res.status(200).json(response);
   } catch (error) {
